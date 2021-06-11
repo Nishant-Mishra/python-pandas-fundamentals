@@ -1,4 +1,7 @@
-
+#!/usr/bin/env python3
+"""
+    Python script for learning Pandas Basics
+"""
 import pandas as pd
 import numpy as np
 
@@ -55,6 +58,7 @@ print()
 
 pd_df.index = ['A', 'B', 'C']
 print("Changing index of 'pd_df' after creating it...")
+print("pd_df.index = ['A', 'B', 'C']")
 print(f"{pd_df}")
 print(f"{pd_df.index = }")
 print()
