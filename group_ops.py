@@ -12,37 +12,60 @@ from indexing_filtering import read_tate_dataset
 
 def titles_per_acq_year(df: pd.DataFrame):
     df_groupby_acq_year = df.groupby(['acquisitionYear'])
+    titles_groupby_acq_year = df_groupby_acq_year['title']
 
     # Method 1: Using Generics
-    for name, group_df in df_groupby_acq_year:
-        print(f"Titles acquired in year {int(name)}: {len(group_df)}")
+    records = {}
+    for name, group_series in titles_groupby_acq_year:  # type: str, pd.Series[str]
+        records[name] = group_series.count()
+    s1 = pd.Series(records)
 
-    print()
     # Method 2A: Using pandas Builtin 'agg' method
-    df = df_groupby_acq_year.agg('count').loc[:, 'title']
-    print(df)
+    s2 = titles_groupby_acq_year.agg(pd.Series.count)   # type: pd.Series[int]
 
-    print()
     # Method 2B: Using pandas Builtin 'agg' method's alternate
-    df = df_groupby_acq_year.count().loc[:, 'title']
-    print(df)
+    s3 = df_groupby_acq_year.count().loc[:, 'title']    # type: pd.Series[int]
+
+    assert s1.equals(s2), "Calculating aggregation by iterating over GroupByDataFrame " \
+                          "should be equal to using Python '.agg'"
+    assert s2.equals(s3), "Calling aggregation func with pandas '.agg' should be equal " \
+                          "to calling the aggregation directly on DataFrame object"
+    s3.index = s3.index.astype('int')
+    print(s3)
 
 
 def oldest_artwork_per_artist(df: pd.DataFrame):
-    df_groupby_artist = df.groupby(['artist'])
+    acq_year_groupby_artist = df.groupby(['artist'])['acquisitionYear']
 
-    for name, group_df in df_groupby_artist:
-        print(f"The first artwork from {name} was acquired in {int(group_df.loc[:, 'acquisitionYear'].min())}")
+    # Method 1: Using Generics
+    records = {}
+    for name, group_series in acq_year_groupby_artist:  # type: str, pd.Series
+        records[name] = group_series.min()
+    s1 = pd.Series(records)
+
+    # Method 2A: Using pandas Builtin 'agg' method
+    s2 = acq_year_groupby_artist.agg(pd.Series.min)     # type: pd.Series
+
+    # Method 2B: Using pandas Builtin 'agg' method's alternate
+    s3 = acq_year_groupby_artist.min()                  # type: pd.Series
+
+    assert s1.equals(s2), "Calculating aggregation by iterating over GroupByDataFrame " \
+                          "should be equal to using Python '.agg'"
+    assert s2.equals(s3), "Calling aggregation func with pandas '.agg' should be equal " \
+                          "to calling the aggregation directly on DataFrame object"
+    s3 = s3.astype('int')
+    print(s3)
 
 
 if __name__ == '__main__':
     tate_dataset_df = read_tate_dataset()
-    tate_dataset_df_subset = tate_dataset_df.iloc[30000:32000, :]
+    tate_dataset_df_subset = tate_dataset_df.iloc[49990:50140, :]
+    print(tate_dataset_df_subset)
 
-    print("Task 1: Total Titles acquired per year")
+    print("Task 1: Total Titles acquired per year:")
     titles_per_acq_year(tate_dataset_df_subset)
     print()
 
-    print("Task 2: Total Titles acquired per year")
+    print("Task 2: Oldest artwork per artist")
     oldest_artwork_per_artist(tate_dataset_df_subset)
     print()
